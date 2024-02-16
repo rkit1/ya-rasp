@@ -95,11 +95,11 @@ export class ApiService {
   tansport_type_strings: Map<Transport_type, string> = new Map([
     ['plane', 'самолет'],
     ['train', 'поезд'],
-    ['suburban', 'электричка'],
+    // ['suburban', 'электричка'],
     ['bus', 'автобус'],
-    ['sea', 'морской транспорт'],
-    ['river', 'речной транспорт'],
-    ['helicopter', 'вертолет'],
+    // ['sea', 'морской транспорт'],
+    // ['river', 'речной транспорт'],
+    // ['helicopter', 'вертолет'],
   ]);
 
   get_stations(type: Transport_type) {
@@ -133,7 +133,7 @@ export class ApiService {
       `/api/v3.0/thread/?apikey=${api_key}` +
       `&uid=${route_uid}&from=${from_uid}` +
       (date ? `&date=${date}` : '')
-    )));
+    ).pipe(Op.catchError(err => O.EMPTY))));
     return O.forkJoin(arr).pipe(Op.map(x => {
       const m = new Map<string, string>();
       x.forEach(val => {

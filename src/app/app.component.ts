@@ -41,7 +41,8 @@ export class AppComponent {
       }
       return this.api.get_stations(tt);
     }),
-    Op.shareReplay(1)
+    Op.catchError(err => O.of(null)),
+    Op.shareReplay(1),
   );
 
   stations_to = O.combineLatest([ctrl_replay(this.station_from), ctrl_replay(this.date)]).pipe(
@@ -53,7 +54,8 @@ export class AppComponent {
         return this.api.get_destination_stations(threads, sf);
       }));
     }),
-    Op.shareReplay(1)
+    Op.catchError(err => O.of(null)),
+    Op.shareReplay(1),
   );
 
   routes = O.combineLatest([ctrl_replay(this.station_from), ctrl_replay(this.station_to), ctrl_replay(this.date)]).pipe(
@@ -63,7 +65,8 @@ export class AppComponent {
       }
       return this.api.get_routes_from_to(sf, st, date.toISOString());
     }),
-    Op.shareReplay(1)
+    Op.catchError(err => O.of(null)),
+    Op.shareReplay(1),
   )
 
   routes_table = this.routes.pipe(Op.map(rs => {
