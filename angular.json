@@ -37,7 +37,8 @@
             "prerender": true,
             "ssr": {
               "entry": "server.ts"
-            }
+            },
+            "preserveSymlinks": true
           },
           "configurations": {
             "production": {
@@ -72,6 +73,9 @@
             "development": {
               "buildTarget": "rasp:build:development"
             }
+          },
+          "options": {
+            "proxyConfig": "proxy.conf.json"
           },
           "defaultConfiguration": "development"
         },

@@ -1,0 +1,10 @@
+{
+  "/api": {
+    "target": "https://api.rasp.yandex.net/",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": ""
+    },
+    "changeOrigin": true
+  }
+}
