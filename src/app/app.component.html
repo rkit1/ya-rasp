@@ -1,44 +1,84 @@
 <div>
-  <label
-    >Тип транспорта
-    <select [(ngModel)]="transport_type" (change)="change_transport_type()">
+  <mat-form-field>
+    <mat-label>Дата</mat-label>
+    <input
+      matInput
+      [matDatepicker]="picker"
+      [formControl]="date"
+      placeholder="0"
+      title=""
+    />
+    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+</div>
+
+<div>
+  <mat-form-field>
+    <mat-label>Тип транспорта</mat-label>
+    <mat-select [formControl]="transport_type">
       @for (tt of api.tansport_type_strings; track $index) {
-      <option [value]="tt[0]">
-        {{ tt[1] }}
-      </option>
+      <mat-option [value]="tt[0]">{{ tt[1] }}</mat-option>
       }
-    </select>
-  </label>
+    </mat-select>
+  </mat-form-field>
 </div>
 
 <div>
-  @if (stations_from) {
-  <label
-    >Откуда
-    <select [(ngModel)]="station_from" (change)="change_station_from()">
-      @for (st of stations_from.stations; track $index) {
-      <option [value]="st.code">
+  <mat-form-field>
+    <mat-label>Откуда</mat-label>
+    <!-- [disabled]="!(stations_from | async)" -->
+    <mat-select
+      
+      [formControl]="station_from"
+    >
+      @for (st of (stations_from | async)?.stations; track $index) {
+      <mat-option [value]="st.code">
         {{ st.title }}
-      </option>
+      </mat-option>
       }
-    </select>
-  </label>
-  }
+    </mat-select>
+  </mat-form-field>
 </div>
 
 <div>
-  @if (stations_to) {
-  <label
-    >куда
-    <select [(ngModel)]="station_to">
-      @for (st of stations_to; track $index) {
-      <option [value]="st[0]">
+  <mat-form-field>
+    <mat-label>куда</mat-label>
+    <!-- [disabled]="!(stations_to | async)" -->
+    <mat-select
+      
+      [formControl]="station_to"
+    >
+      @for (st of stations_to | async; track $index) {
+      <mat-option [value]="st[0]">
         {{ st[1] }}
-      </option>
+      </mat-option>
       }
-    </select>
-  </label>
-  }
+    </mat-select>
+  </mat-form-field>
 </div>
+
+<table mat-table [dataSource]="(routes_table | async) || []" class="mat-elevation-z8">
+
+  <ng-container matColumnDef="arrival">
+    <th mat-header-cell *matHeaderCellDef>Отправление</th>
+    <td mat-cell *matCellDef="let element">{{element.departure}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="departure">
+    <th mat-header-cell *matHeaderCellDef>Прибытие</th>
+    <td mat-cell *matCellDef="let element">{{element.arrival}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="route">
+    <th mat-header-cell *matHeaderCellDef>Маршрут</th>
+    <td mat-cell *matCellDef="let element">{{element.thread.number}} {{element.thread.title}}</td>
+  </ng-container>
+
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+
 
 <!-- <router-outlet /> -->

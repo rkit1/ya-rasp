@@ -49,26 +49,41 @@ export interface Stations_nearest extends Pagination {
 }
 
 export interface Station_schedule extends Pagination {
-  "schedule": [{
+  "schedule": {
     "thread": {
       "uid": string,
     }
-  },],
-  "interval_schedule": [{
+  }[],
+  "interval_schedule": {
     "thread": {
       "uid": string,
     },
-  },],
+  }[],
 }
 
 export interface Thread_schedule {
   "title": string,
-  "stops": [{
+  "stops": {
     "station": {
       "title": string,
       "code": string,
     },
-  },]
+  }[]
+}
+
+export interface Routes_from_to extends Pagination {
+  "interval_segments": {
+    "start_date": string,
+    "duration": number
+  }[],
+  "segments": {
+    "arrival": string,
+    "departure": string
+    "thread": {
+      "title": string,
+      "number": string
+    }
+  }[]
 }
 
 @Injectable({
@@ -95,10 +110,11 @@ export class ApiService {
   }
 
   // Возвращает uid всех линий
-  get_threads(uid: string): O.Observable<Set<string>> {
+  get_routes(uid: string, date?: string): O.Observable<Set<string>> {
     return this.http.get<Station_schedule>(
       `/api/v3.0/schedule/?apikey=${api_key}` +
-      `&station=${uid}`
+      `&station=${uid}` +
+      (date ? `&date=${date}` : '')
     ).pipe(Op.map(sch => {
       const thr = new Set<string>();
       for (const ent of sch.schedule) {
@@ -111,11 +127,12 @@ export class ApiService {
     }));
   }
 
-  get_destination_stations(routes: Set<string>, from_uid: string): O.Observable<Map<string, string>> {
+  get_destination_stations(routes: Set<string>, from_uid: string, date?: string): O.Observable<Map<string, string>> {
     const arr: O.Observable<Thread_schedule>[] = [];
     routes.forEach(route_uid => arr.push(this.http.get<Thread_schedule>(
       `/api/v3.0/thread/?apikey=${api_key}` +
-      `&uid=${route_uid}&from=${from_uid}` // date
+      `&uid=${route_uid}&from=${from_uid}` +
+      (date ? `&date=${date}` : '')
     )));
     return O.forkJoin(arr).pipe(Op.map(x => {
       const m = new Map<string, string>();
@@ -128,5 +145,11 @@ export class ApiService {
     }));
   }
 
-
+  get_routes_from_to(from_uid: string, to_uid: string, date?: string) {
+    return this.http.get<Routes_from_to>(
+      `/api/v3.0/search/?apikey=${api_key}` +
+      `&from=${from_uid}&to=${to_uid}` +
+      (date ? `&date=${date}` : '')
+    )
+  }
 }
