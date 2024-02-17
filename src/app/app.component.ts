@@ -82,21 +82,19 @@ export class AppComponent implements OnInit, OnDestroy {
     console.log(this.constructor.name, this);
   }
 
-  alive = false;
-  subs = [];
+  dead = new O.Subject<void>();
   ngOnInit(): void {
-    this.alive = true;
-
-    this.stations_from.pipe(Op.takeWhile(() => this.alive), Op.distinctUntilChanged()).subscribe(x => {
+    this.stations_from.pipe(Op.takeUntil(this.dead), Op.distinctUntilChanged()).subscribe(x => {
       this.station_from.setValue(null);
     });
 
-    this.stations_to.pipe(Op.takeWhile(() => this.alive), Op.distinctUntilChanged()).subscribe(x => {
+    this.stations_to.pipe(Op.takeUntil(this.dead), Op.distinctUntilChanged()).subscribe(x => {
       this.station_to.setValue(null);
     });
   }
 
   ngOnDestroy(): void {
-    this.alive = false;
+    this.dead.next();
+    this.dead.complete();
   }
 }
