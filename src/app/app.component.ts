@@ -1,4 +1,4 @@
-import { Component, Signal, WritableSignal, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, Signal, WritableSignal, computed, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ApiService, Routes_from_to, Station_nearest, Stations_nearest, Transport_type } from './api.service';
 import { Form, FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
@@ -26,7 +26,7 @@ function ctrl_replay<T>(ctrl: FormControl<T>) {
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   api = inject(ApiService);
 
   date = new FormControl(new Date());
@@ -35,7 +35,7 @@ export class AppComponent {
   station_to = new FormControl<string | null>(null);
 
   stations_from = ctrl_replay(this.transport_type).pipe(
-    Op.concatMap(tt => {
+    Op.switchMap(tt => {
       if (!tt) {
         return O.of(null);
       }
@@ -46,12 +46,15 @@ export class AppComponent {
   );
 
   stations_to = O.combineLatest([ctrl_replay(this.station_from), ctrl_replay(this.date)]).pipe(
-    Op.concatMap(([sf, date]) => {
+    Op.switchMap(([sf, date]) => {
       if (!sf || !date) {
         return O.of(null);
       }
-      return this.api.get_routes(sf, date.toISOString()).pipe(Op.concatMap(threads => {
-        return this.api.get_destination_stations(threads, sf);
+      return this.api.get_routes(sf, date.toISOString()).pipe(Op.switchMap(threads => {
+        if (threads.size == 0) {
+          return O.of(new Map<string, string>());
+        }
+        return this.api.get_destination_stations(threads, sf).pipe(Op.startWith("loading"));
       }));
     }),
     Op.catchError(err => O.of(null)),
@@ -59,7 +62,7 @@ export class AppComponent {
   );
 
   routes = O.combineLatest([ctrl_replay(this.station_from), ctrl_replay(this.station_to), ctrl_replay(this.date)]).pipe(
-    Op.concatMap(([sf, st, date]) => {
+    Op.switchMap(([sf, st, date]) => {
       if (!sf || !st || !date) {
         return O.of(null);
       }
@@ -77,5 +80,24 @@ export class AppComponent {
 
   constructor() {
     console.log(this.constructor.name, this);
+  }
+
+  alive = false;
+  ngOnInit(): void {
+    this.alive = true;
+
+    this.stations_from.pipe(Op.distinctUntilChanged()).subscribe(x => {
+      if (!this.alive) return;
+      this.station_from.setValue(null);
+    });
+
+    this.stations_to.pipe(Op.distinctUntilChanged()).subscribe(x => {
+      if (!this.alive) return;
+      this.station_to.setValue(null);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.alive = false;
   }
 }

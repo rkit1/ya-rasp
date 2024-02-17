@@ -28,16 +28,16 @@
   <mat-form-field>
     <mat-label>Откуда</mat-label>
     <!-- [disabled]="!(stations_from | async)" -->
-    <mat-select
-      
-      [formControl]="station_from"
-    >
+    <mat-select [formControl]="station_from">
       @for (st of (stations_from | async)?.stations; track $index) {
       <mat-option [value]="st.code">
         {{ st.title }}
       </mat-option>
       }
     </mat-select>
+    @if ((stations_from | async)?.stations?.length === 0) {
+    <span style="color: red">Ничего не найдено</span>
+    }
   </mat-form-field>
 </div>
 
@@ -45,40 +45,47 @@
   <mat-form-field>
     <mat-label>куда</mat-label>
     <!-- [disabled]="!(stations_to | async)" -->
-    <mat-select
-      
-      [formControl]="station_to"
-    >
+    <mat-select [formControl]="station_to">
       @for (st of stations_to | async; track $index) {
       <mat-option [value]="st[0]">
         {{ st[1] }}
       </mat-option>
       }
     </mat-select>
+    @if ((stations_to | async) === 'loading') {
+      <span>загрузка</span>
+    } 
+    @else if ($any(stations_to | async)?.size == 0) {
+      <span style="color: red">Ничего не найдено</span>
+    }
+
   </mat-form-field>
 </div>
 
-<table mat-table [dataSource]="(routes_table | async) || []" class="mat-elevation-z8">
-
+<table
+  mat-table
+  [dataSource]="(routes_table | async) || []"
+  class="mat-elevation-z8"
+>
   <ng-container matColumnDef="arrival">
     <th mat-header-cell *matHeaderCellDef>Отправление</th>
-    <td mat-cell *matCellDef="let element">{{element.departure}}</td>
+    <td mat-cell *matCellDef="let element">{{ element.departure }}</td>
   </ng-container>
 
   <ng-container matColumnDef="departure">
     <th mat-header-cell *matHeaderCellDef>Прибытие</th>
-    <td mat-cell *matCellDef="let element">{{element.arrival}}</td>
+    <td mat-cell *matCellDef="let element">{{ element.arrival }}</td>
   </ng-container>
 
   <ng-container matColumnDef="route">
     <th mat-header-cell *matHeaderCellDef>Маршрут</th>
-    <td mat-cell *matCellDef="let element">{{element.thread.number}} {{element.thread.title}}</td>
+    <td mat-cell *matCellDef="let element">
+      {{ element.thread.number }} {{ element.thread.title }}
+    </td>
   </ng-container>
 
-
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 </table>
-
 
 <!-- <router-outlet /> -->
